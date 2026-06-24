@@ -27,6 +27,9 @@
     <ClInclude Include="src\rlgl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\raygui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\raudio.c">

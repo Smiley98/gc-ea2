@@ -122,6 +122,9 @@
 #define RAYMATH_IMPLEMENTATION
 #include "raymath.h"                // Vector2, Vector3, Quaternion and Matrix functionality
 
+#define RAYGUI_IMPLEMENTATION
+#include "raygui.h"
+
 #if SUPPORT_GESTURES_SYSTEM
     #define RGESTURES_IMPLEMENTATION
     #include "rgestures.h"          // Gestures detection functionality

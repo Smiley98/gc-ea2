@@ -93,6 +93,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\config.h" />
+    <ClInclude Include="src\raygui.h" />
     <ClInclude Include="src\raylib.h" />
     <ClInclude Include="src\raymath.h" />
     <ClInclude Include="src\rcamera.h" />
