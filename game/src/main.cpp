@@ -34,143 +34,225 @@ void OnDestroyTest(Entity* self, std::vector<Entity>* collection)
     collection->push_back(e);
 }
 
-int main()
+struct Demo
+{
+    void (*Load)() = nullptr;
+    void (*Unload)() = nullptr;
+    void (*Update)(float dt) = nullptr;
+    void (*Draw)() = nullptr;
+};
+
+void GameLoad(Demo* demo)
 {
     InitWindow(800, 800, "Game");
     SetTargetFPS(60);
 
+    if (demo->Load != nullptr)
+        demo->Load();
+}
+
+void GameUnload(Demo* demo)
+{
+    if (demo->Unload != nullptr)
+        demo->Unload();
+
+    CloseWindow();
+}
+
+void GameUpdate(Demo* demo, float dt)
+{
+    if (demo->Update != nullptr)
+        demo->Update(dt);
+}
+
+void GameDraw(Demo* demo)
+{
+    if (demo->Draw != nullptr)
+        demo->Draw();
+}
+
+namespace demo_colliders
+{
     std::array<Collider, 5> colliders_a;
     std::array<Collider, 4> colliders_b;
-    colliders_a[1].type = colliders_b[1].type = COLLIDER_TYPE_CIRCLE;
-    colliders_a[2].type = colliders_b[2].type = COLLIDER_TYPE_AABB;
-    colliders_a[3].type = colliders_b[3].type = COLLIDER_TYPE_CAPSULE;
-    colliders_a[4].type  = COLLIDER_TYPE_PLANE;
 
-    colliders_a[1].circle.radius = colliders_b[1].circle.radius = 15.0f;
-    colliders_a[2].aabb.half_extents = colliders_b[2].aabb.half_extents = { 10.0f, 20.0f };
-    colliders_a[3].capsule.radius = colliders_b[3].capsule.radius = 10.0f;
-    colliders_a[3].capsule.half_length = colliders_b[3].capsule.half_length = 15.0f;
-    colliders_a[3].capsule.direction = colliders_b[3].capsule.direction = Vector2UnitX;
-    colliders_a[4].plane.normal = Vector2UnitX;
+    Vector2 collider_pos_a;
+    Vector2 collider_pos_b;
 
-    Vector2 collider_pos_a = { GetScreenWidth() * 0.25f, GetScreenHeight() * 0.25f };
-    Vector2 collider_pos_b = { GetScreenWidth() * 0.75f, GetScreenHeight() * 0.25f };
-    int collider_index_a = 1;
-    int collider_index_b = 1;
+    int collider_index_a;
+    int collider_index_b;
 
-    float entity_spawn_current = 0.0f;
-    float entity_spawn_total = 0.5f;
+    bool collision = false;
 
-    std::vector<Entity> entities;
-    InitBallPitDemo(&entities);
+    void Load()
+    {
+        colliders_a[1].type = colliders_b[1].type = COLLIDER_TYPE_CIRCLE;
+        colliders_a[2].type = colliders_b[2].type = COLLIDER_TYPE_AABB;
+        colliders_a[3].type = colliders_b[3].type = COLLIDER_TYPE_CAPSULE;
+        colliders_a[4].type = COLLIDER_TYPE_PLANE;
+
+        colliders_a[1].circle.radius = colliders_b[1].circle.radius = 15.0f;
+        colliders_a[2].aabb.half_extents = colliders_b[2].aabb.half_extents = { 10.0f, 20.0f };
+        colliders_a[3].capsule.radius = colliders_b[3].capsule.radius = 10.0f;
+        colliders_a[3].capsule.half_length = colliders_b[3].capsule.half_length = 15.0f;
+        colliders_a[3].capsule.direction = colliders_b[3].capsule.direction = Vector2UnitX;
+        colliders_a[4].plane.normal = Vector2UnitX;
+
+        collider_pos_a = { GetScreenWidth() * 0.25f, GetScreenHeight() * 0.25f };
+        collider_pos_b = { GetScreenWidth() * 0.75f, GetScreenHeight() * 0.25f };
+
+        collider_index_a = 1;
+        collider_index_b = 1;
+    }
+
+    void Update(float dt)
+    {
+            static float angle = 0.0f;
+            if (IsKeyDown(KEY_Q))
+                angle -= 100.0f * dt * DEG2RAD;
+            if (IsKeyDown(KEY_E))
+                angle += 100.0f * dt * DEG2RAD;
+
+            Vector2 normal = Vector2Rotate(Vector2UnitX, angle);
+            colliders_a[4].plane.normal = normal;
+
+            {
+                collider_pos_a = GetMousePosition();
+                Vector2 mtv = Vector2Zeros;
+                CollisionFunc func = COLLISION_TABLE[collider_index_a][collider_index_b];
+                collision = func(collider_pos_a, colliders_a[collider_index_a], collider_pos_b, colliders_b[collider_index_b], &mtv);
+            
+                if (collision)
+                    collider_pos_b += mtv;
+            }
+    }
+
+    void Draw()
+    {
+        BeginDrawing();
+        ClearBackground(WHITE);
+
+        DrawCollider(collider_pos_a, colliders_a[collider_index_a], collision ? RED : GREEN);
+        DrawCollider(collider_pos_b, colliders_b[collider_index_b], collision ? RED : GREEN);
+        GuiToggleGroup({ 10, 10, 90, 30 }, "None A;Circle A;AABB A;Capsule A;Plane A", &collider_index_a);
+        GuiToggleGroup({ 10, 45, 90, 30 }, "None B;Circle B;AABB B;Capsule B", &collider_index_b);
+
+        if (collider_index_a == COLLIDER_TYPE_PLANE)
+        {
+            Collider a = colliders_a[collider_index_a];
+            Collider b = colliders_b[collider_index_b];
+
+            switch (collider_index_b)
+            {
+            case COLLIDER_TYPE_CIRCLE:
+                DrawProjCirclePlane(collider_pos_b, b.circle.radius, collider_pos_a, a.plane.normal);
+                break;
+
+            case COLLIDER_TYPE_AABB:
+                DrawProjBoxPlane(collider_pos_b, b.aabb.half_extents, collider_pos_a, a.plane.normal);
+                break;
+
+            case COLLIDER_TYPE_CAPSULE:
+                DrawProjCapsulePlane(collider_pos_b, b.capsule.direction, b.capsule.half_length, b.capsule.radius, collider_pos_a, a.plane.normal);
+                break;
+            }
+        }
+
+        EndDrawing();
+    }
+}
+
+namespace demo_ball_pit
+{
+
+}
+
+namespace demo_forces
+{
+
+}
+
+namespace demo_friction
+{
+
+}
+
+int main()
+{
+    Demo d00_colliders =
+    {
+        .Load = demo_colliders::Load,
+        .Unload = nullptr,
+        .Update = demo_colliders::Update,
+        .Draw = demo_colliders::Draw,
+    };
+
+    Demo* demo = &d00_colliders;
+
+    GameLoad(demo);
+
+    //float entity_spawn_current = 0.0f;
+    //float entity_spawn_total = 0.5f;
+
+    //std::vector<Entity> entities;
+    //InitBallPitDemo(&entities);
     //InitForcesDemo(&entities);
     //InitFrictionDemo(&entities);
 
     bool is_first_frame = true;
     while (!WindowShouldClose())
     {
-        float dt = GetFrameTime();
-
-        {
-            static float plane_angle = 0.0f;
-            if (IsKeyDown(KEY_Q))
-                plane_angle -= 100.0f * dt * DEG2RAD;
-            if (IsKeyDown(KEY_E))
-                plane_angle += 100.0f * dt * DEG2RAD;
-
-            Vector2 normal = Vector2Rotate(Vector2UnitX, plane_angle);
-            colliders_a[4].plane.normal = normal;
-            //entities[0].collider.plane.normal = normal;
-        }
-
         if (!is_first_frame)
         {
-            for (Entity& e : entities)
-                EntityUpdate(e, dt);
+            GameUpdate(demo, GetFrameTime());
+            //for (Entity& e : entities)
+            //    EntityUpdate(e, dt);
         }
         else
             is_first_frame = false;
 
-        std::vector<EntityHit> hits = DetectCollisions(entities);
-        for (const EntityHit& hit : hits)
-        {
-            ApplyCollisionImpulse(*hit.a, *hit.b, hit.mtv);
-            ApplyCollisionMtv(*hit.a, *hit.b, hit.mtv);
+        GameDraw(demo);
 
-            if (hit.a->on_collision != nullptr)
-                hit.a->on_collision(hit.a, hit.b);
+        //std::vector<EntityHit> hits = DetectCollisions(entities);
+        //for (const EntityHit& hit : hits)
+        //{
+        //    ApplyCollisionImpulse(*hit.a, *hit.b, hit.mtv);
+        //    ApplyCollisionMtv(*hit.a, *hit.b, hit.mtv);
+        //
+        //    if (hit.a->on_collision != nullptr)
+        //        hit.a->on_collision(hit.a, hit.b);
+        //
+        //    if (hit.b->on_collision != nullptr)
+        //        hit.b->on_collision(hit.b, hit.a);
+        //}
 
-            if (hit.b->on_collision != nullptr)
-                hit.b->on_collision(hit.b, hit.a);
-        }
-
-        for (size_t i = 0; i < entities.size(); i++)
-        {
-            if (entities[i].destroy && entities[i].on_destroy != nullptr)
-                entities[i].on_destroy(&entities[i], &entities);
-        }
+        //for (size_t i = 0; i < entities.size(); i++)
+        //{
+        //    if (entities[i].destroy && entities[i].on_destroy != nullptr)
+        //        entities[i].on_destroy(&entities[i], &entities);
+        //}
 
         // entities[0..3] are planes so don't remove them!
-        if (entities.size() >= 128)
-            entities[4].destroy = true;
-        std::erase_if(entities, [](const Entity& e) { return e.destroy; });
-
-        //bool collider_collision = false;
-        //{
-        //    collider_pos_a = GetMousePosition();
-        //    Vector2 mtv = Vector2Zeros;
-        //    CollisionFunc func = COLLISION_TABLE[collider_index_a][collider_index_b];
-        //    collider_collision = func(collider_pos_a, colliders_a[collider_index_a], collider_pos_b, colliders_b[collider_index_b], &mtv);
-        //
-        //    if (collider_collision)
-        //        collider_pos_b += mtv;
-        //}
-
-        BeginDrawing();
-        ClearBackground(WHITE);
-
-        //DrawCollider(collider_pos_a, colliders_a[collider_index_a], collider_collision ? RED : GREEN);
-        //DrawCollider(collider_pos_b, colliders_b[collider_index_b], collider_collision ? RED : GREEN);
-        //GuiToggleGroup({ 10, 10, 90, 30 }, "None A;Circle A;AABB A;Capsule A;Plane A", &collider_index_a);
-        //GuiToggleGroup({ 10, 45, 90, 30 }, "None B;Circle B;AABB B;Capsule B", &collider_index_b);
-        //
-        //if (collider_index_a == COLLIDER_TYPE_PLANE)
-        //{
-        //    Collider a = colliders_a[collider_index_a];
-        //    Collider b = colliders_b[collider_index_b];
-        //
-        //    switch (collider_index_b)
-        //    {
-        //    case COLLIDER_TYPE_CIRCLE:
-        //        DrawProjCirclePlane(collider_pos_b, b.circle.radius, collider_pos_a, a.plane.normal);
-        //        break;
-        //
-        //    case COLLIDER_TYPE_AABB:
-        //        DrawProjBoxPlane(collider_pos_b, b.aabb.half_extents, collider_pos_a, a.plane.normal);
-        //        break;
-        //
-        //    case COLLIDER_TYPE_CAPSULE:
-        //        DrawProjCapsulePlane(collider_pos_b, b.capsule.direction, b.capsule.half_length, b.capsule.radius, collider_pos_a, a.plane.normal);
-        //        break;
-        //    }
-        //}
-
-        for (const Entity& e : entities)
-            DrawCollider(e.pos, e.collider, e.color);
+        //if (entities.size() >= 128)
+        //    entities[4].destroy = true;
+        //std::erase_if(entities, [](const Entity& e) { return e.destroy; });
+        
+        //for (const Entity& e : entities)
+        //    DrawCollider(e.pos, e.collider, e.color);
 
         // OBB test
-        {
-            static Vector2 obb_pos = { GetScreenWidth() * 0.5f, GetScreenHeight() * 0.5f };
-            static Vector2 obb_extents = { 40.0f, 20.0f };
-            static Vector2 obb_direction = Vector2Rotate(Vector2UnitX, 30.0f * DEG2RAD);
-
-            Vector2 obb_mtv = Vector2Zeros;
-            bool obb_collision = HitTestCircleOBB(GetMousePosition(), 4.0f, obb_pos, obb_direction, obb_extents, &obb_mtv);
-            obb_pos += obb_mtv;
-
-            DrawOBB(obb_pos, obb_extents, obb_direction, obb_collision ? RED : GREEN);
-            DrawCircleV(GetMousePosition(), 4.0f, BLUE);
-        }
+        //{
+        //    static Vector2 obb_pos = { GetScreenWidth() * 0.5f, GetScreenHeight() * 0.5f };
+        //    static Vector2 obb_extents = { 40.0f, 20.0f };
+        //    static Vector2 obb_direction = Vector2Rotate(Vector2UnitX, 30.0f * DEG2RAD);
+        //
+        //    Vector2 obb_mtv = Vector2Zeros;
+        //    bool obb_collision = HitTestCircleOBB(GetMousePosition(), 4.0f, obb_pos, obb_direction, obb_extents, &obb_mtv);
+        //    obb_pos += obb_mtv;
+        //
+        //    DrawOBB(obb_pos, obb_extents, obb_direction, obb_collision ? RED : GREEN);
+        //    DrawCircleV(GetMousePosition(), 4.0f, BLUE);
+        //}
 
         // The relative velocity is plane relative to ball rather than ball relative to plane because friciton is *opposite* to velocity!
         // (If the plane is guaranteed to be stationary, we can pass -ball.vel)
@@ -185,11 +267,9 @@ int main()
         //    DrawLineEx(ball.pos, ball.pos + GRAVITY, 4.0f, RED);
         //    DrawLineEx(ball.pos, ball.pos + normal * proj_gravity, 4.0f, GREEN);
         //}
-
-        EndDrawing();
     }
 
-    CloseWindow();
+    GameUnload(demo);
     return 0;
 }
 
