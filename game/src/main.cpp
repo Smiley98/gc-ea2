@@ -36,40 +36,11 @@ void OnDestroyTest(Entity* self, std::vector<Entity>* collection)
 
 struct Demo
 {
-    void (*Load)() = nullptr;
-    void (*Unload)() = nullptr;
-    void (*Update)(float dt) = nullptr;
-    void (*Draw)() = nullptr;
+    void (*Load)();
+    void (*Unload)();
+    void (*Update)(float dt);
+    void (*Draw)();
 };
-
-void GameLoad(Demo* demo)
-{
-    InitWindow(800, 800, "Game");
-    SetTargetFPS(60);
-
-    if (demo->Load != nullptr)
-        demo->Load();
-}
-
-void GameUnload(Demo* demo)
-{
-    if (demo->Unload != nullptr)
-        demo->Unload();
-
-    CloseWindow();
-}
-
-void GameUpdate(Demo* demo, float dt)
-{
-    if (demo->Update != nullptr)
-        demo->Update(dt);
-}
-
-void GameDraw(Demo* demo)
-{
-    if (demo->Draw != nullptr)
-        demo->Draw();
-}
 
 namespace demo_colliders
 {
@@ -177,101 +148,133 @@ namespace demo_friction
 
 }
 
+struct App
+{
+    std::vector<Demo> demos;
+    Demo* demo = nullptr;
+};
+
+void AppLoadDemos(App* app);
+void AppUnloadDemos(App* app);
+
+void AppLoad(App* app)
+{
+    InitWindow(800, 800, "Game");
+    InitAudioDevice();
+
+    AppLoadDemos(app);
+    if (app->demo->Load != nullptr)
+        app->demo->Load();
+}
+
+void AppUnload(App* app)
+{
+    if (app->demo->Unload != nullptr)
+        app->demo->Unload();
+    AppUnloadDemos(app);
+
+    CloseAudioDevice();
+    CloseWindow();
+}
+
+void AppUpdate(App* app, float dt)
+{
+    static bool is_first_frame = true;
+    if (!is_first_frame)
+    {
+        if (app->demo->Update != nullptr)
+            app->demo->Update(dt);
+    }
+    else
+        is_first_frame = false;
+}
+
+void AppDraw(App* app)
+{
+    if (app->demo->Draw != nullptr)
+        app->demo->Draw();
+}
+
 int main()
 {
-    Demo d00_colliders =
-    {
-        .Load = demo_colliders::Load,
-        .Unload = nullptr,
-        .Update = demo_colliders::Update,
-        .Draw = demo_colliders::Draw,
-    };
+    App app;
+    AppLoad(&app);
 
-    Demo* demo = &d00_colliders;
-
-    GameLoad(demo);
-
-    //float entity_spawn_current = 0.0f;
-    //float entity_spawn_total = 0.5f;
-
-    //std::vector<Entity> entities;
-    //InitBallPitDemo(&entities);
-    //InitForcesDemo(&entities);
-    //InitFrictionDemo(&entities);
-
-    bool is_first_frame = true;
     while (!WindowShouldClose())
     {
-        if (!is_first_frame)
-        {
-            GameUpdate(demo, GetFrameTime());
-            //for (Entity& e : entities)
-            //    EntityUpdate(e, dt);
-        }
-        else
-            is_first_frame = false;
-
-        GameDraw(demo);
-
-        //std::vector<EntityHit> hits = DetectCollisions(entities);
-        //for (const EntityHit& hit : hits)
-        //{
-        //    ApplyCollisionImpulse(*hit.a, *hit.b, hit.mtv);
-        //    ApplyCollisionMtv(*hit.a, *hit.b, hit.mtv);
-        //
-        //    if (hit.a->on_collision != nullptr)
-        //        hit.a->on_collision(hit.a, hit.b);
-        //
-        //    if (hit.b->on_collision != nullptr)
-        //        hit.b->on_collision(hit.b, hit.a);
-        //}
-
-        //for (size_t i = 0; i < entities.size(); i++)
-        //{
-        //    if (entities[i].destroy && entities[i].on_destroy != nullptr)
-        //        entities[i].on_destroy(&entities[i], &entities);
-        //}
-
-        // entities[0..3] are planes so don't remove them!
-        //if (entities.size() >= 128)
-        //    entities[4].destroy = true;
-        //std::erase_if(entities, [](const Entity& e) { return e.destroy; });
-        
-        //for (const Entity& e : entities)
-        //    DrawCollider(e.pos, e.collider, e.color);
-
-        // OBB test
-        //{
-        //    static Vector2 obb_pos = { GetScreenWidth() * 0.5f, GetScreenHeight() * 0.5f };
-        //    static Vector2 obb_extents = { 40.0f, 20.0f };
-        //    static Vector2 obb_direction = Vector2Rotate(Vector2UnitX, 30.0f * DEG2RAD);
-        //
-        //    Vector2 obb_mtv = Vector2Zeros;
-        //    bool obb_collision = HitTestCircleOBB(GetMousePosition(), 4.0f, obb_pos, obb_direction, obb_extents, &obb_mtv);
-        //    obb_pos += obb_mtv;
-        //
-        //    DrawOBB(obb_pos, obb_extents, obb_direction, obb_collision ? RED : GREEN);
-        //    DrawCircleV(GetMousePosition(), 4.0f, BLUE);
-        //}
-
-        // The relative velocity is plane relative to ball rather than ball relative to plane because friciton is *opposite* to velocity!
-        // (If the plane is guaranteed to be stationary, we can pass -ball.vel)
-        //{
-        //    Entity& plane = entities[0];
-        //    Entity& ball = entities[1];
-        //    Vector2 normal = plane.collider.plane.normal;
-        //    Vector2 vel_plane_to_ball = plane.vel - ball.vel;
-        //    Vector2 tangent = Vector2Tangent(vel_plane_to_ball, normal);
-        //    float proj_gravity = fabsf(Vector2DotProduct(GRAVITY, normal));
-        //    DrawLineEx(ball.pos, ball.pos + tangent, 4.0f, DARKBLUE);
-        //    DrawLineEx(ball.pos, ball.pos + GRAVITY, 4.0f, RED);
-        //    DrawLineEx(ball.pos, ball.pos + normal * proj_gravity, 4.0f, GREEN);
-        //}
+        AppUpdate(&app, GetFrameTime());
+        AppDraw(&app);
     }
 
-    GameUnload(demo);
+    AppUnload(&app);
     return 0;
 }
+
+//float entity_spawn_current = 0.0f;
+//float entity_spawn_total = 0.5f;
+
+//std::vector<Entity> entities;
+//InitBallPitDemo(&entities);
+//InitForcesDemo(&entities);
+//InitFrictionDemo(&entities);
+
+//for (Entity& e : entities)
+//    EntityUpdate(e, dt);
+
+//std::vector<EntityHit> hits = DetectCollisions(entities);
+//for (const EntityHit& hit : hits)
+//{
+//    ApplyCollisionImpulse(*hit.a, *hit.b, hit.mtv);
+//    ApplyCollisionMtv(*hit.a, *hit.b, hit.mtv);
+//
+//    if (hit.a->on_collision != nullptr)
+//        hit.a->on_collision(hit.a, hit.b);
+//
+//    if (hit.b->on_collision != nullptr)
+//        hit.b->on_collision(hit.b, hit.a);
+//}
+
+//for (size_t i = 0; i < entities.size(); i++)
+//{
+//    if (entities[i].destroy && entities[i].on_destroy != nullptr)
+//        entities[i].on_destroy(&entities[i], &entities);
+//}
+
+// entities[0..3] are planes so don't remove them!
+//if (entities.size() >= 128)
+//    entities[4].destroy = true;
+//std::erase_if(entities, [](const Entity& e) { return e.destroy; });
+
+//for (const Entity& e : entities)
+//    DrawCollider(e.pos, e.collider, e.color);
+
+// OBB test
+//{
+//    static Vector2 obb_pos = { GetScreenWidth() * 0.5f, GetScreenHeight() * 0.5f };
+//    static Vector2 obb_extents = { 40.0f, 20.0f };
+//    static Vector2 obb_direction = Vector2Rotate(Vector2UnitX, 30.0f * DEG2RAD);
+//
+//    Vector2 obb_mtv = Vector2Zeros;
+//    bool obb_collision = HitTestCircleOBB(GetMousePosition(), 4.0f, obb_pos, obb_direction, obb_extents, &obb_mtv);
+//    obb_pos += obb_mtv;
+//
+//    DrawOBB(obb_pos, obb_extents, obb_direction, obb_collision ? RED : GREEN);
+//    DrawCircleV(GetMousePosition(), 4.0f, BLUE);
+//}
+
+// The relative velocity is plane relative to ball rather than ball relative to plane because friciton is *opposite* to velocity!
+// (If the plane is guaranteed to be stationary, we can pass -ball.vel)
+//{
+//    Entity& plane = entities[0];
+//    Entity& ball = entities[1];
+//    Vector2 normal = plane.collider.plane.normal;
+//    Vector2 vel_plane_to_ball = plane.vel - ball.vel;
+//    Vector2 tangent = Vector2Tangent(vel_plane_to_ball, normal);
+//    float proj_gravity = fabsf(Vector2DotProduct(GRAVITY, normal));
+//    DrawLineEx(ball.pos, ball.pos + tangent, 4.0f, DARKBLUE);
+//    DrawLineEx(ball.pos, ball.pos + GRAVITY, 4.0f, RED);
+//    DrawLineEx(ball.pos, ball.pos + normal * proj_gravity, 4.0f, GREEN);
+//}
 
 void InitWalls(std::vector<Entity>* entities)
 {
@@ -502,4 +505,24 @@ void ApplyCollisionMtv(Entity& a/*dynamic*/, Entity& b/*static*/, Vector2 mtv)
         a.pos += mtv * 0.5f;
         b.pos -= mtv * 0.5f;
     }
+}
+
+void AppLoadDemos(App* app)
+{
+    Demo d00_colliders =
+    {
+        .Load = demo_colliders::Load,
+        .Unload = nullptr,
+        .Update = demo_colliders::Update,
+        .Draw = demo_colliders::Draw,
+    };
+
+    app->demos.push_back(d00_colliders);
+    app->demo = &app->demos.back();
+}
+
+void AppUnloadDemos(App* app)
+{
+    app->demo = nullptr;
+    app->demos.clear();
 }
