@@ -51,5 +51,11 @@ void WorldResolveCollisions(std::vector<EntityHit> hits)
     {
         EntityApplyCollisionImpulse(*hit.a, *hit.b, hit.mtv);
         EntityApplyCollisionMtv(*hit.a, *hit.b, hit.mtv);
+
+        if (hit.a->on_collision != nullptr)
+            hit.a->on_collision(hit.a, hit.b);
+
+        if (hit.b->on_collision != nullptr)
+            hit.b->on_collision(hit.b, hit.a);
     }
 }

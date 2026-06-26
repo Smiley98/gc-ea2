@@ -56,10 +56,8 @@ namespace demo_forces
     {
         BeginDrawing();
         ClearBackground(WHITE);
-
         for (const Entity& e : entities)
             DrawCollider(e.pos, e.collider, e.color);
-
         EndDrawing();
     }
 }
