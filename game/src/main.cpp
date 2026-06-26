@@ -1,14 +1,8 @@
 #include "Build.cpp"
 
 void InitWalls(std::vector<Entity>* entities);
-void InitFrictionDemo(std::vector<Entity>* entities);
 void InitBallPitDemo(std::vector<Entity>* entities);
 void MakeBall(Entity* e);
-
-std::vector<EntityHit> DetectCollisions(const std::vector<Entity>& entities);
-
-void ApplyCollisionImpulse(Entity& a/*dynamic*/, Entity& b/*static*/, Vector2 mtv);
-void ApplyCollisionMtv(Entity& a/*dynamic*/, Entity& b/*static*/, Vector2 mtv);
 
 inline Color GetRandomColor()
 {
@@ -34,24 +28,6 @@ void OnDestroyTest(Entity* self, std::vector<Entity>* collection)
 }
 
 namespace demo_ball_pit
-{
-    void Load()
-    {
-
-    }
-
-    void Update(float dt)
-    {
-
-    }
-
-    void Draw()
-    {
-
-    }
-}
-
-namespace demo_friction
 {
     void Load()
     {
@@ -242,42 +218,6 @@ void InitWalls(std::vector<Entity>* entities)
     }
 }
 
-void InitFrictionDemo(std::vector<Entity>* entities)
-{
-    Vector2 position = { GetScreenWidth() * 0.5f, 600.0f };
-
-    {
-        Entity plane{};
-        plane.pos = position;
-        plane.collider.type = COLLIDER_TYPE_PLANE;
-        plane.collider.plane.normal = Vector2UnitY * -1.0f;
-        
-        plane.gravity_scale = 0.0f;
-        plane.inverse_mass = 0.0f;
-        plane.restitution = 1.0f;
-        plane.friction = 1.0f;
-        
-        plane.color = GREEN;
-        entities->push_back(plane);
-    }
-
-    {
-        Entity ball{};
-        ball.collider.type = COLLIDER_TYPE_CIRCLE;
-        ball.collider.circle.radius = 20.0f;
-        ball.pos = position - Vector2UnitY * ball.collider.circle.radius;
-        ball.vel = Vector2UnitX * 250.0f;
-
-        ball.gravity_scale = 1.0f;
-        ball.inverse_mass = 1.0f;
-        ball.restitution = 1.0f;
-        ball.friction = 1.0f;
-
-        ball.color = PURPLE;
-        entities->push_back(ball);
-    }
-}
-
 void InitBallPitDemo(std::vector<Entity>* entities)
 {
     InitWalls(entities);
@@ -310,102 +250,13 @@ void MakeBall(Entity* e)
     e->collider.circle.radius = 10.0f;
 }
 
-std::vector<EntityHit> DetectCollisions(const std::vector<Entity>& entities)
-{
-    std::vector<EntityHit> hits;
-    for (int i = 0; i < entities.size(); i++)
-    {
-        for (int j = i + 1; j < entities.size(); j++)
-        {
-            const Entity& a = entities[i];
-            const Entity& b = entities[j];
-            assert(a.collider.type != COLLIDER_TYPE_NONE && b.collider.type != COLLIDER_TYPE_NONE);
-            if (EntityIsMassInfinite(a) && EntityIsMassInfinite(b)) continue; // Don't test two static objects
-
-            Vector2 mtv = Vector2Zeros;
-            CollisionFunc func = COLLISION_TABLE[a.collider.type][b.collider.type];
-            bool collision = func(a.pos, a.collider, b.pos, b.collider, &mtv);
-
-            if (collision)
-            {
-                EntityHit hit;
-                if (EntityIsMassInfinite(a))
-                {
-                    hit.a = (Entity*)&b;
-                    hit.b = (Entity*)&a;
-                }
-                else
-                {
-                    hit.a = (Entity*)&a;
-                    hit.b = (Entity*)&b;
-                }
-
-                float dot = Vector2DotProduct(hit.a->pos - hit.b->pos, mtv);
-                if (dot < 0.0f)
-                {
-                    mtv *= -1.0f;
-                }
-
-                hit.mtv = mtv;
-                hits.push_back(hit);
-            }
-        }
-    }
-
-    return hits;
-}
-
-void ApplyCollisionImpulse(Entity& a/*dynamic*/, Entity& b/*static*/, Vector2 mtv)
-{
-    float inverse_mass_sum = a.inverse_mass + b.inverse_mass;
-    assert(inverse_mass_sum > EPSILON);
-
-    Vector2 normal = Vector2Normalize(mtv);
-    Vector2 vel_rel = a.vel - b.vel;
-    float proj_vel_norm = Vector2DotProduct(vel_rel, normal);
-
-    // Objects already separating (fails if vel_rel is pointing the wrong way, textbook is incorrect)
-    if (proj_vel_norm > 0.0f) return;
-
-    float e = fminf(a.restitution, b.restitution);
-    float j = (-(1.0f + e) * proj_vel_norm) / inverse_mass_sum;
-
-    Vector2 impulse = normal * j;
-    a.vel += impulse * a.inverse_mass;
-    b.vel -= impulse * b.inverse_mass;
-
-    Vector2 tangent = Vector2Normalize(Vector2Tangent(vel_rel, normal));
-
-    float jt = -Vector2DotProduct(vel_rel, tangent) / inverse_mass_sum;
-    float friction = sqrtf(a.friction * b.friction);
-    jt = Clamp(jt, -j * friction, j * friction);
-
-    Vector2 tangent_impulse = tangent * jt;
-
-    a.vel += tangent_impulse * a.inverse_mass;
-    b.vel -= tangent_impulse * b.inverse_mass;
-}
-
-void ApplyCollisionMtv(Entity& a/*dynamic*/, Entity& b/*static*/, Vector2 mtv)
-{
-    if (EntityIsMassInfinite(b))
-    {
-       a.pos += mtv;
-    }
-    else
-    {
-        a.pos += mtv * 0.5f;
-        b.pos -= mtv * 0.5f;
-    }
-}
-
 void AppLoadDemos(App* app)
 {
     Demo d00_empty =
     {
-        .Load = demo_empty::Load,
+        .Load = nullptr,
         .Unload = nullptr,
-        .Update = demo_empty::Update,
+        .Update = nullptr,
         .Draw = demo_empty::Draw,
     };
 
@@ -420,14 +271,23 @@ void AppLoadDemos(App* app)
     Demo d02_forces =
     {
         .Load = demo_forces::Load,
-        .Unload = nullptr,
+        .Unload = demo_forces::Unload,
         .Update = demo_forces::Update,
         .Draw = demo_forces::Draw,
+    };
+
+    Demo d03_friction =
+    {
+        .Load = demo_friction::Load,
+        .Unload = demo_friction::Unload,
+        .Update = demo_friction::Update,
+        .Draw = demo_friction::Draw,
     };
 
     app->demos.push_back(d00_empty);
     app->demos.push_back(d01_colliders);
     app->demos.push_back(d02_forces);
+    app->demos.push_back(d03_friction);
     app->demo = &app->demos.back();
 }
 

@@ -34,6 +34,8 @@ struct EntityHit
 };
 
 void EntityUpdate(Entity& entity, float dt);
+void EntityApplyCollisionImpulse(Entity& a, Entity& b, Vector2 mtv);
+void EntityApplyCollisionMtv(Entity& a, Entity& b, Vector2 mtv);
 
 inline bool EntityIsMassInfinite(const Entity& e)
 {
