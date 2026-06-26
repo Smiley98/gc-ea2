@@ -133,6 +133,32 @@ namespace demo_colliders
     }
 }
 
+namespace demo_empty
+{
+    void Load()
+    {
+
+    }
+
+    void Unload()
+    {
+
+    }
+
+    void Update(float dt)
+    {
+
+    }
+
+    void Draw()
+    {
+        BeginDrawing();
+        ClearBackground(WHITE);
+        DrawCircleV(GetMousePosition(), 20.0f, RED);
+        EndDrawing();
+    }
+}
+
 namespace demo_ball_pit
 {
 
@@ -161,6 +187,7 @@ void AppLoad(App* app)
 {
     InitWindow(800, 800, "Game");
     InitAudioDevice();
+    SetTargetFPS(60);
 
     AppLoadDemos(app);
     if (app->demo->Load != nullptr)
@@ -509,15 +536,15 @@ void ApplyCollisionMtv(Entity& a/*dynamic*/, Entity& b/*static*/, Vector2 mtv)
 
 void AppLoadDemos(App* app)
 {
-    Demo d00_colliders =
+    Demo d00_empty =
     {
-        .Load = demo_colliders::Load,
+        .Load = demo_empty::Load,
         .Unload = nullptr,
-        .Update = demo_colliders::Update,
-        .Draw = demo_colliders::Draw,
+        .Update = demo_empty::Update,
+        .Draw = demo_empty::Draw,
     };
 
-    app->demos.push_back(d00_colliders);
+    app->demos.push_back(d00_empty);
     app->demo = &app->demos.back();
 }
 
@@ -526,3 +553,11 @@ void AppUnloadDemos(App* app)
     app->demo = nullptr;
     app->demos.clear();
 }
+
+//Demo d00_colliders =
+//{
+//    .Load = demo_colliders::Load,
+//    .Unload = nullptr,
+//    .Update = demo_colliders::Update,
+//    .Draw = demo_colliders::Draw,
+//};
