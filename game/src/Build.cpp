@@ -13,3 +13,5 @@
 #include "Draw.h"
 
 #include "Entity.cpp"
+
+#include "Demos.cpp"
