@@ -30,6 +30,9 @@
     <ClCompile Include="src\Demo01Colliders.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Demo02Forces.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\app.ico">

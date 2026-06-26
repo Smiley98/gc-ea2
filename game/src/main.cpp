@@ -1,7 +1,6 @@
 #include "Build.cpp"
 
 void InitWalls(std::vector<Entity>* entities);
-void InitForcesDemo(std::vector<Entity>* entities);
 void InitFrictionDemo(std::vector<Entity>* entities);
 void InitBallPitDemo(std::vector<Entity>* entities);
 void MakeBall(Entity* e);
@@ -36,17 +35,38 @@ void OnDestroyTest(Entity* self, std::vector<Entity>* collection)
 
 namespace demo_ball_pit
 {
+    void Load()
+    {
 
-}
+    }
 
-namespace demo_forces
-{
+    void Update(float dt)
+    {
 
+    }
+
+    void Draw()
+    {
+
+    }
 }
 
 namespace demo_friction
 {
+    void Load()
+    {
 
+    }
+
+    void Update(float dt)
+    {
+
+    }
+
+    void Draw()
+    {
+
+    }
 }
 
 struct App
@@ -81,14 +101,13 @@ void AppUnload(App* app)
 
 void AppUpdate(App* app, float dt)
 {
-    static bool is_first_frame = true;
-    if (!is_first_frame)
+    static int frame_count = 0;
+    if (frame_count >= 2)
     {
         if (app->demo->Update != nullptr)
             app->demo->Update(dt);
     }
-    else
-        is_first_frame = false;
+    frame_count++;
 }
 
 void AppDraw(App* app)
@@ -117,7 +136,6 @@ int main()
 
 //std::vector<Entity> entities;
 //InitBallPitDemo(&entities);
-//InitForcesDemo(&entities);
 //InitFrictionDemo(&entities);
 
 //for (Entity& e : entities)
@@ -222,34 +240,6 @@ void InitWalls(std::vector<Entity>* entities)
         bottom.color = GREEN;
         entities->push_back(bottom);
     }
-}
-
-void InitForcesDemo(std::vector<Entity>* entities)
-{
-    Entity light{}, medium{}, heavy{};
-    light.gravity_scale = medium.gravity_scale = heavy.gravity_scale = 1.0f;
-    light.color = medium.color = heavy.color = GRAY;
-
-    Collider collider;
-    collider.type = COLLIDER_TYPE_CIRCLE;
-    collider.circle.radius = 20.0f;
-
-    light.collider = medium.collider = heavy.collider = collider;
-
-    light.pos = { 200.0f, 600.0f };
-    medium.pos = { 400.0f, 600.0f };
-    heavy.pos = { 600.0f, 600.0f };
-
-    light.inverse_mass = 1.0f / 10.0f;
-    medium.inverse_mass = 1.0f / 25.0f;
-    heavy.inverse_mass = 1.0f / 50.0f;
-
-    // Apply 100,000N of force to all 3 balls
-    light.force = medium.force = heavy.force = Vector2UnitY * -100000.0f;
-
-    entities->push_back(light);
-    entities->push_back(medium);
-    entities->push_back(heavy);
 }
 
 void InitFrictionDemo(std::vector<Entity>* entities)
@@ -427,8 +417,17 @@ void AppLoadDemos(App* app)
         .Draw = demo_colliders::Draw,
     };
 
+    Demo d02_forces =
+    {
+        .Load = demo_forces::Load,
+        .Unload = nullptr,
+        .Update = demo_forces::Update,
+        .Draw = demo_forces::Draw,
+    };
+
     app->demos.push_back(d00_empty);
     app->demos.push_back(d01_colliders);
+    app->demos.push_back(d02_forces);
     app->demo = &app->demos.back();
 }
 
@@ -437,3 +436,8 @@ void AppUnloadDemos(App* app)
     app->demo = nullptr;
     app->demos.clear();
 }
+
+// Notes:
+// Apparently frame 1 (in addition to frame 0) gives huge time-delta?
+// Investigate implementing proper fixed update??
+// Might cause a headache / jittering, but may be worth while to weave into a timers lesson!
