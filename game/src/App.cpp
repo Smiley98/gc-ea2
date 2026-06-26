@@ -87,11 +87,20 @@ void AppLoadDemos(App* app)
         .Draw = demo_ball_pit::Draw,
     };
 
+    Demo d05_obbs =
+    {
+        .Load = nullptr,
+        .Unload = nullptr,
+        .Update = nullptr,
+        .Draw = demo_obbs::Draw,
+    };
+
     app->demos.push_back(d00_empty);
     app->demos.push_back(d01_colliders);
     app->demos.push_back(d02_forces);
     app->demos.push_back(d03_friction);
     app->demos.push_back(d04_ball_pit);
+    app->demos.push_back(d05_obbs);
     app->demo = &app->demos.back();
 }
 
