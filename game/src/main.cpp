@@ -2,7 +2,7 @@
 
 int main()
 {
-    App app;
+    App app{};
     AppLoad(&app);
 
     while (!WindowShouldClose())

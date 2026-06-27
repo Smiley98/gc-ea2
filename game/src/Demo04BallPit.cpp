@@ -83,11 +83,9 @@ namespace demo_ball_pit
 
     void Draw()
     {
-        BeginDrawing();
         ClearBackground(WHITE);
         for (const Entity& e : entities)
             DrawCollider(e.pos, e.collider, e.color);
-        EndDrawing();
     }
 
     void MakeBall(Entity* e)

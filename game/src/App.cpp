@@ -2,10 +2,12 @@ struct App
 {
     std::vector<Demo*> demos;
     size_t demo_index;
+    bool demo_select;
 };
 
 void AppLoadDemos(App* app);
 void AppUnloadDemos(App* app);
+void AppSetDemo(App* app, size_t demo_index);
 
 void AppLoad(App* app)
 {
@@ -31,18 +33,34 @@ void AppUnload(App* app)
 void AppUpdate(App* app, float dt)
 {
     static int frame_count = 0;
-    if (frame_count >= 2)
+    frame_count++;
+    if (frame_count > 2)
     {
         if (app->demos[app->demo_index]->Update != nullptr)
             app->demos[app->demo_index]->Update(dt);
     }
-    frame_count++;
+
+    if (IsKeyPressed(KEY_GRAVE))
+        app->demo_select = !app->demo_select;
 }
 
 void AppDraw(App* app)
 {
+    BeginDrawing();
+
     if (app->demos[app->demo_index]->Draw != nullptr)
         app->demos[app->demo_index]->Draw();
+
+    if (app->demo_select)
+    {
+        int demo_index = app->demo_index;
+        GuiToggleGroup({ 10, 760, 90, 30 }, "0 - Empty;1 - Collision;2 - Forces;3 - Friction;4 - Ball Pit; 5 - OBBs", &demo_index);
+
+        if (demo_index != app->demo_index)
+            AppSetDemo(app, (size_t)demo_index);
+    }
+
+    EndDrawing();
 }
 
 void AppLoadDemos(App* app)
@@ -60,4 +78,15 @@ void AppUnloadDemos(App* app)
 {
     app->demos.clear();
     app->demo_index = 0;
+}
+
+void AppSetDemo(App* app, size_t demo_index)
+{
+    if (app->demos[app->demo_index]->Unload != nullptr)
+        app->demos[app->demo_index]->Unload();
+
+    app->demo_index = demo_index;
+
+    if (app->demos[app->demo_index]->Load != nullptr)
+        app->demos[app->demo_index]->Load();
 }

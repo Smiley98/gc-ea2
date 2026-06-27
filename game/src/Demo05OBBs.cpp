@@ -2,7 +2,6 @@ namespace demo_obbs
 {
     void Draw()
     {
-        BeginDrawing();
         ClearBackground(WHITE);
         static Vector2 obb_pos = { GetScreenWidth() * 0.5f, GetScreenHeight() * 0.5f };
         static Vector2 obb_extents = { 40.0f, 20.0f };
@@ -14,6 +13,5 @@ namespace demo_obbs
         
         DrawOBB(obb_pos, obb_extents, obb_direction, obb_collision ? RED : GREEN);
         DrawCircleV(GetMousePosition(), 4.0f, BLUE);
-        EndDrawing();
     }
 }

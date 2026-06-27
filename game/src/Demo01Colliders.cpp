@@ -58,9 +58,7 @@ namespace demo_colliders
 
     void Draw()
     {
-        BeginDrawing();
         ClearBackground(WHITE);
-
         DrawCollider(collider_pos_a, colliders_a[collider_index_a], collision ? RED : GREEN);
         DrawCollider(collider_pos_b, colliders_b[collider_index_b], collision ? RED : GREEN);
         GuiToggleGroup({ 10, 10, 90, 30 }, "None A;Circle A;AABB A;Capsule A;Plane A", &collider_index_a);
@@ -86,7 +84,5 @@ namespace demo_colliders
                 break;
             }
         }
-
-        EndDrawing();
     }
 }

@@ -65,7 +65,6 @@ namespace demo_friction
 
     void Draw()
     {
-        BeginDrawing();
         ClearBackground(WHITE);
 
         for (const Entity& e : entities)
@@ -80,7 +79,5 @@ namespace demo_friction
         DrawLineEx(ball.pos, ball.pos + tangent, 4.0f, DARKBLUE);
         DrawLineEx(ball.pos, ball.pos + GRAVITY, 4.0f, RED);
         DrawLineEx(ball.pos, ball.pos + normal * proj_gravity, 4.0f, GREEN);
-
-        EndDrawing();
     }
 }
