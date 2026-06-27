@@ -167,6 +167,7 @@
   <ItemGroup>
     <ClInclude Include="src\Collider.h" />
     <ClInclude Include="src\Collision.h" />
+    <ClInclude Include="src\Demos.h" />
     <ClInclude Include="src\Draw.h" />
     <ClInclude Include="src\Entity.h" />
     <ClInclude Include="src\Geometry.h" />

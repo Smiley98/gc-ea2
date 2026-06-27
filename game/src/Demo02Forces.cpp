@@ -44,12 +44,8 @@ namespace demo_forces
         for (const Entity& e : entities)
             reset &= e.pos.y >= GetScreenHeight();
 
-        // TODO - Make common DemoReset function?
         if (reset)
-        {
-            Unload();
-            Load();
-        }
+            DemoReset(&demo_02_forces);
     }
 
     void Draw()
