@@ -4,6 +4,7 @@ namespace demo_gjk
     Vector2 direction;
     float radius;
     float half_length;
+    Vector2 half_extents;
 
     Vector2 SupportCircle(Vector2 position, float radius, Vector2 d)
     {
@@ -18,12 +19,27 @@ namespace demo_gjk
         return proj + d * radius;
     }
 
+    Vector2 SupportAABB(Vector2 position, Vector2 half_extents, Vector2 d)
+    {
+        Vector2 proj = Vector2Zeros;
+        proj.x = d.x >= 0.0f ? half_extents.x : -half_extents.x;
+        proj.y = d.y >= 0.0f ? half_extents.y : -half_extents.y;
+        return position + proj;
+    }
+
+    //Vector2 SupportOBB(Vector2 position, Vector2 direction, Vector2 half_extents, Vector2 d)
+    //{
+    //
+    //}
+
     void Load()
     {
         position = { GetScreenWidth() * 0.5f, GetScreenHeight() * 0.5f };
         direction = Vector2UnitX;
         radius = 20.0f;
         half_length = 50.0f;
+        half_extents.x = half_length;
+        half_extents.y = radius;
     }
 
     void Unload()
@@ -47,10 +63,12 @@ namespace demo_gjk
 
         Vector2 d = Vector2Normalize(GetMousePosition() - position);
         //Vector2 p = SupportCircle(position, radius, d);
-        Vector2 p = SupportCapsule(position, direction, half_length, radius, d);
+        //Vector2 p = SupportCapsule(position, direction, half_length, radius, d);
+        Vector2 p = SupportAABB(position, half_extents, d);
 
         //DrawCircleV(position, radius, RED);
-        DrawCapsule(position, direction, half_length, radius, RED);
+        //DrawCapsule(position, direction, half_length, radius, RED);
+        DrawAABB(position, half_extents, RED);
         DrawCircleV(p, 4.0f, BLUE);
 
         // Support point is "poi between shape and plane perpendicular to d"
