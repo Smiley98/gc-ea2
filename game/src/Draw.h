@@ -25,11 +25,11 @@ inline void DrawCapsule(Vector2 position, Vector2 direction, float half_length, 
     DrawCircleV(top, radius, color);
     DrawCircleV(bot, radius, color);
 
-    DrawLineEx(position, top, half_length * 0.1f, BLUE);
-    DrawLineEx(top, top + Vector2Rotate(direction, 45.0f * DEG2RAD) * radius, radius * 0.1f, SKYBLUE);
+    //DrawLineEx(position, top, half_length * 0.1f, BLUE);
+    //DrawLineEx(top, top + Vector2Rotate(direction, 45.0f * DEG2RAD) * radius, radius * 0.1f, SKYBLUE);
 
-    DrawCircleV(top, radius * 0.25f, DARKBLUE);
-    DrawCircleV(bot, radius * 0.25f, MAGENTA);
+    //DrawCircleV(top, radius * 0.25f, DARKBLUE);
+    //DrawCircleV(bot, radius * 0.25f, MAGENTA);
 }
 
 inline void DrawCollider(Vector2 position, Collider collider, Color color)
