@@ -22,3 +22,4 @@ extern Demo demo_02_forces;
 extern Demo demo_03_friction;
 extern Demo demo_04_ball_pit;
 extern Demo demo_05_obbs;
+extern Demo demo_06_gjk;

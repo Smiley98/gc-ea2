@@ -71,6 +71,7 @@ void AppLoadDemos(App* app)
     app->demos.push_back(&demo_03_friction);
     app->demos.push_back(&demo_04_ball_pit);
     app->demos.push_back(&demo_05_obbs);
+    app->demos.push_back(&demo_06_gjk);
     app->demo_index = app->demos.size() - 1;
 }
 
